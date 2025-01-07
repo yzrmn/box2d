@@ -5,9 +5,6 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const box2d_dep = b.dependency("box2d", .{});
-    const glfw_dep = b.lazyDependency("glfw", .{}); // Only used by samples
-    const imgui_dep = b.lazyDependency("imgui", .{}); // Only used by samples
-    const enki_dep = b.lazyDependency("enkits", .{}); // Only used by samples
 
     const lib = b.addStaticLibrary(.{
         .name = "box2d",
@@ -60,6 +57,13 @@ pub fn build(b: *std.Build) void {
     });
     b.installArtifact(lib);
 
+    const testing = b.option(bool, "test", "Enable test applications (examples, benchmarks)") orelse false;
+    if (!testing) return;
+
+    const glfw_dep = b.lazyDependency("glfw", .{}) orelse return;
+    const imgui_dep = b.lazyDependency("imgui", .{}) orelse return;
+    const enki_dep = b.lazyDependency("enkits", .{}) orelse return;
+
     const samples_exe = b.addExecutable(.{
         .name = "samples",
         .target = target,
@@ -107,40 +111,34 @@ pub fn build(b: *std.Build) void {
         },
     });
     // Library dependencies
-    if (imgui_dep) |dep| {
-        samples_exe.addIncludePath(dep.path("."));
-        samples_exe.addIncludePath(dep.path("backends"));
-        samples_exe.addCSourceFiles(.{
-            .flags = &.{
-                "-std=c++17",
-            },
-            .root = dep.path("."),
-            .files = &.{
-                "imgui.cpp",
-                "imgui_draw.cpp",
-                "imgui_demo.cpp",
-                "imgui_tables.cpp",
-                "imgui_widgets.cpp",
-                "backends/imgui_impl_glfw.cpp",
-                "backends/imgui_impl_opengl3.cpp",
-            },
-        });
-    }
-    if (glfw_dep) |dep| {
-        samples_exe.addIncludePath(dep.path("include"));
-        samples_exe.linkLibrary(dep.artifact("glfw"));
-    }
-    if (enki_dep) |dep| {
-        samples_exe.addIncludePath(dep.path("src"));
-        samples_exe.addCSourceFiles(.{
-            .flags = &.{},
-            .root = dep.path("src"),
-            .files = &.{
-                "TaskScheduler.cpp",
-                "TaskScheduler_c.cpp",
-            },
-        });
-    }
+    samples_exe.addIncludePath(imgui_dep.path("."));
+    samples_exe.addIncludePath(imgui_dep.path("backends"));
+    samples_exe.addCSourceFiles(.{
+        .flags = &.{
+            "-std=c++17",
+        },
+        .root = imgui_dep.path("."),
+        .files = &.{
+            "imgui.cpp",
+            "imgui_draw.cpp",
+            "imgui_demo.cpp",
+            "imgui_tables.cpp",
+            "imgui_widgets.cpp",
+            "backends/imgui_impl_glfw.cpp",
+            "backends/imgui_impl_opengl3.cpp",
+        },
+    });
+    samples_exe.addIncludePath(glfw_dep.path("include"));
+    samples_exe.linkLibrary(glfw_dep.artifact("glfw"));
+    samples_exe.addIncludePath(enki_dep.path("src"));
+    samples_exe.addCSourceFiles(.{
+        .flags = &.{},
+        .root = enki_dep.path("src"),
+        .files = &.{
+            "TaskScheduler.cpp",
+            "TaskScheduler_c.cpp",
+        },
+    });
     b.installArtifact(samples_exe);
     b.installDirectory(.{
         .install_dir = .prefix,

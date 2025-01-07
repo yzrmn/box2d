@@ -51,5 +51,5 @@ pub fn main() void {
 This build script can also run the official examples. From this repository run:
 
 ```shell
-zig build run
+zig build -Dtest run
 ```

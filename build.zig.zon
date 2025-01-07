@@ -1,0 +1,27 @@
+.{
+    .name = "box2d",
+    .version = "3.0.0-1",
+    .dependencies = .{
+        .box2d = .{
+            .url = "git+https://github.com/erincatto/box2d.git?ref=main#f377034920c42a26cd498c0a0b1b2e9f2b064989",
+            .hash = "1220c6750412ebc698694cd08aca4fe87fda8e2df0d4ffa7d33e7de5b8ca5bebb643",
+        },
+        // Below dependencies are only used by sample application
+        .glfw = .{
+            .url = "git+https://github.com/emidoots/glfw?ref=master#ec656e10d3643a3a71149bb96ae6b0831b84b677",
+            .hash = "12207be469bad84baed2ede75cf89ede37e1ed5ee8be62a54d2b2112c5f56a44cc89",
+        },
+        .imgui = .{
+            .url = "git+https://github.com/ocornut/imgui?ref=v1.91.3#cb16568fca5297512ff6a8f3b877f461c4323fbe",
+            .hash = "1220dbde2c4211686e4d0431c0969fe48af2bd7f859d3eab9ee22b3c64750d86c408",
+        },
+        .enkits = .{
+            .url = "git+https://github.com/dougbinks/enkiTS?ref=master#686d0ec31829e0d9e5edf9ceb68c40f9b9b20ea9",
+            .hash = "1220c5ff6b113f3ccfae2412919b8ea92103885fae82acd9d63250f192ae2f5651e1",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+    },
+}

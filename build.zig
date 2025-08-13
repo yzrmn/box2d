@@ -17,10 +17,11 @@ pub fn build(b: *std.Build) void {
     lib.addCSourceFiles(.{
         .root = box2d_dep.path("src"),
         .flags = &.{
-            "-std=c17",
+            "-std=gnu17",
         },
         .files = &.{
             "aabb.c",
+            "arena_allocator.c",
             "array.c",
             "bitset.c",
             "body.c",
@@ -41,12 +42,13 @@ pub fn build(b: *std.Build) void {
             "math_functions.c",
             "motor_joint.c",
             "mouse_joint.c",
+            "mover.c",
             "prismatic_joint.c",
             "revolute_joint.c",
+            "sensor.c",
             "shape.c",
             "solver.c",
             "solver_set.c",
-            "stack_allocator.c",
             "table.c",
             "timer.c",
             "types.c",
@@ -75,7 +77,10 @@ pub fn build(b: *std.Build) void {
     samples_exe.addIncludePath(box2d_dep.path("extern/glad/include"));
     samples_exe.addIncludePath(box2d_dep.path("extern/jsmn"));
     samples_exe.addCSourceFiles(.{
-        .flags = &.{},
+        .flags = &.{
+            "-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS",
+            "-std=c++20",
+        },
         .root = box2d_dep.path("samples"),
         .files = &.{
             "car.cpp",
@@ -86,6 +91,7 @@ pub fn build(b: *std.Build) void {
             "sample.cpp",
             "sample_benchmark.cpp",
             "sample_bodies.cpp",
+            "sample_character.cpp",
             "sample_collision.cpp",
             "sample_continuous.cpp",
             "sample_determinism.cpp",
@@ -96,16 +102,18 @@ pub fn build(b: *std.Build) void {
             "sample_shapes.cpp",
             "sample_stacking.cpp",
             "sample_world.cpp",
-            "settings.cpp",
             "shader.cpp",
         },
     });
     samples_exe.addCSourceFiles(.{
-        .flags = &.{},
+        .flags = &.{
+            "-std=gnu17",
+        },
         .root = box2d_dep.path("."),
         .files = &.{
             "extern/glad/src/glad.c",
             "shared/benchmarks.c",
+            "shared/determinism.c",
             "shared/human.c",
             "shared/random.c",
         },
@@ -115,7 +123,8 @@ pub fn build(b: *std.Build) void {
     samples_exe.addIncludePath(imgui_dep.path("backends"));
     samples_exe.addCSourceFiles(.{
         .flags = &.{
-            "-std=c++17",
+            "-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS",
+            "-std=c++20",
         },
         .root = imgui_dep.path("."),
         .files = &.{
@@ -132,7 +141,9 @@ pub fn build(b: *std.Build) void {
     samples_exe.linkLibrary(glfw_dep.artifact("glfw"));
     samples_exe.addIncludePath(enki_dep.path("src"));
     samples_exe.addCSourceFiles(.{
-        .flags = &.{},
+        .flags = &.{
+            "-std=c++11",
+        },
         .root = enki_dep.path("src"),
         .files = &.{
             "TaskScheduler.cpp",

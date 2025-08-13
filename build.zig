@@ -74,12 +74,18 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     }) orelse return;
+    const system_sdk_dep = b.lazyDependency("system_sdk", .{}) orelse return;
 
     const samples_exe = b.addExecutable(.{
         .name = "samples",
         .target = target,
         .optimize = optimize,
     });
+
+    if (target.result.os.tag == .linux) {
+        samples_exe.addIncludePath(system_sdk_dep.path("linux/include"));
+    }
+
     samples_exe.linkLibrary(lib);
     samples_exe.linkLibCpp();
     samples_exe.addIncludePath(box2d_dep.path("shared"));

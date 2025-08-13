@@ -62,9 +62,18 @@ pub fn build(b: *std.Build) void {
     const testing = b.option(bool, "test", "Enable test applications (examples, benchmarks)") orelse false;
     if (!testing) return;
 
-    const glfw_dep = b.lazyDependency("glfw", .{}) orelse return;
-    const imgui_dep = b.lazyDependency("imgui", .{}) orelse return;
-    const enki_dep = b.lazyDependency("enkits", .{}) orelse return;
+    const glfw_dep = b.lazyDependency("glfw", .{
+        .target = target,
+        .optimize = optimize,
+    }) orelse return;
+    const imgui_dep = b.lazyDependency("imgui", .{
+        .target = target,
+        .optimize = optimize,
+    }) orelse return;
+    const enki_dep = b.lazyDependency("enkits", .{
+        .target = target,
+        .optimize = optimize,
+    }) orelse return;
 
     const samples_exe = b.addExecutable(.{
         .name = "samples",

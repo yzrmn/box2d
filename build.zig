@@ -86,8 +86,22 @@ pub fn build(b: *std.Build) void {
         .link_libcpp = true,
     });
 
-    if (target.result.os.tag == .linux) {
-        samples_mod.addIncludePath(system_sdk_dep.path("linux/include"));
+    switch (target.result.os.tag) {
+        .macos => {
+            samples_mod.addLibraryPath(system_sdk_dep.path("macos12/usr/lib"));
+            samples_mod.addSystemIncludePath(system_sdk_dep.path("macos12/usr/include"));
+            samples_mod.addFrameworkPath(system_sdk_dep.path("macos12/System/Library/Frameworks"));
+        },
+        .linux => {
+            if (target.result.cpu.arch.isX86()) {
+                samples_mod.addLibraryPath(system_sdk_dep.path("linux/lib/x86_64-linux-gnu"));
+            } else {
+                samples_mod.addLibraryPath(system_sdk_dep.path("linux/lib/aarch64-linux-gnu"));
+            }
+
+            samples_mod.addSystemIncludePath(system_sdk_dep.path("linux/include"));
+        },
+        else => {},
     }
 
     samples_mod.linkLibrary(box2d_lib);

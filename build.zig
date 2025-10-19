@@ -6,15 +6,13 @@ pub fn build(b: *std.Build) void {
 
     const box2d_dep = b.dependency("box2d", .{});
 
-    const lib = b.addStaticLibrary(.{
-        .name = "box2d",
+    const box2d_mod = b.addModule("box2d", .{
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
-    lib.linkLibC();
-    lib.addIncludePath(box2d_dep.path("include"));
-    lib.installHeadersDirectory(box2d_dep.path("include"), "", .{});
-    lib.addCSourceFiles(.{
+    box2d_mod.addIncludePath(box2d_dep.path("include"));
+    box2d_mod.addCSourceFiles(.{
         .root = box2d_dep.path("src"),
         .flags = &.{
             "-std=gnu17",
@@ -57,7 +55,13 @@ pub fn build(b: *std.Build) void {
             "world.c",
         },
     });
-    b.installArtifact(lib);
+
+    const box2d_lib = b.addLibrary(.{
+        .name = "box2d",
+        .root_module = box2d_mod,
+    });
+    box2d_lib.installHeadersDirectory(box2d_dep.path("include"), "", .{});
+    b.installArtifact(box2d_lib);
 
     const testing = b.option(bool, "test", "Enable test applications (examples, benchmarks)") orelse false;
     if (!testing) return;
@@ -76,22 +80,21 @@ pub fn build(b: *std.Build) void {
     }) orelse return;
     const system_sdk_dep = b.lazyDependency("system_sdk", .{}) orelse return;
 
-    const samples_exe = b.addExecutable(.{
-        .name = "samples",
+    const samples_mod = b.createModule(.{
         .target = target,
         .optimize = optimize,
+        .link_libcpp = true,
     });
 
     if (target.result.os.tag == .linux) {
-        samples_exe.addIncludePath(system_sdk_dep.path("linux/include"));
+        samples_mod.addIncludePath(system_sdk_dep.path("linux/include"));
     }
 
-    samples_exe.linkLibrary(lib);
-    samples_exe.linkLibCpp();
-    samples_exe.addIncludePath(box2d_dep.path("shared"));
-    samples_exe.addIncludePath(box2d_dep.path("extern/glad/include"));
-    samples_exe.addIncludePath(box2d_dep.path("extern/jsmn"));
-    samples_exe.addCSourceFiles(.{
+    samples_mod.linkLibrary(box2d_lib);
+    samples_mod.addIncludePath(box2d_dep.path("shared"));
+    samples_mod.addIncludePath(box2d_dep.path("extern/glad/include"));
+    samples_mod.addIncludePath(box2d_dep.path("extern/jsmn"));
+    samples_mod.addCSourceFiles(.{
         .flags = &.{
             "-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS",
             "-std=c++20",
@@ -120,7 +123,7 @@ pub fn build(b: *std.Build) void {
             "shader.cpp",
         },
     });
-    samples_exe.addCSourceFiles(.{
+    samples_mod.addCSourceFiles(.{
         .flags = &.{
             "-std=gnu17",
         },
@@ -134,9 +137,9 @@ pub fn build(b: *std.Build) void {
         },
     });
     // Library dependencies
-    samples_exe.addIncludePath(imgui_dep.path("."));
-    samples_exe.addIncludePath(imgui_dep.path("backends"));
-    samples_exe.addCSourceFiles(.{
+    samples_mod.addIncludePath(imgui_dep.path("."));
+    samples_mod.addIncludePath(imgui_dep.path("backends"));
+    samples_mod.addCSourceFiles(.{
         .flags = &.{
             "-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS",
             "-std=c++20",
@@ -152,10 +155,10 @@ pub fn build(b: *std.Build) void {
             "backends/imgui_impl_opengl3.cpp",
         },
     });
-    samples_exe.addIncludePath(glfw_dep.path("include"));
-    samples_exe.linkLibrary(glfw_dep.artifact("glfw"));
-    samples_exe.addIncludePath(enki_dep.path("src"));
-    samples_exe.addCSourceFiles(.{
+    samples_mod.addIncludePath(glfw_dep.path("include"));
+    samples_mod.linkLibrary(glfw_dep.artifact("glfw"));
+    samples_mod.addIncludePath(enki_dep.path("src"));
+    samples_mod.addCSourceFiles(.{
         .flags = &.{
             "-std=c++11",
         },
@@ -165,6 +168,12 @@ pub fn build(b: *std.Build) void {
             "TaskScheduler_c.cpp",
         },
     });
+
+    const samples_exe = b.addExecutable(.{
+        .name = "samples",
+        .root_module = samples_mod,
+    });
+
     b.installArtifact(samples_exe);
     b.installDirectory(.{
         .install_dir = .prefix,

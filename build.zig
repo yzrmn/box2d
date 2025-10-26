@@ -85,6 +85,10 @@ pub fn build(b: *std.Build) void {
         .link_libcpp = true,
     });
 
+    if (target.result.os.tag == .macos) {
+        samples_mod.linkFramework("QuartzCore", .{});
+    }
+
     samples_mod.linkLibrary(box2d_lib);
     samples_mod.addIncludePath(box2d_dep.path("shared"));
     samples_mod.addIncludePath(box2d_dep.path("extern/glad/include"));

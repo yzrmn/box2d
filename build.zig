@@ -78,31 +78,12 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     }) orelse return;
-    const system_sdk_dep = b.lazyDependency("system_sdk", .{}) orelse return;
 
     const samples_mod = b.createModule(.{
         .target = target,
         .optimize = optimize,
         .link_libcpp = true,
     });
-
-    switch (target.result.os.tag) {
-        .macos => {
-            samples_mod.addLibraryPath(system_sdk_dep.path("macos12/usr/lib"));
-            samples_mod.addSystemIncludePath(system_sdk_dep.path("macos12/usr/include"));
-            samples_mod.addFrameworkPath(system_sdk_dep.path("macos12/System/Library/Frameworks"));
-        },
-        .linux => {
-            if (target.result.cpu.arch.isX86()) {
-                samples_mod.addLibraryPath(system_sdk_dep.path("linux/lib/x86_64-linux-gnu"));
-            } else {
-                samples_mod.addLibraryPath(system_sdk_dep.path("linux/lib/aarch64-linux-gnu"));
-            }
-
-            samples_mod.addSystemIncludePath(system_sdk_dep.path("linux/include"));
-        },
-        else => {},
-    }
 
     samples_mod.linkLibrary(box2d_lib);
     samples_mod.addIncludePath(box2d_dep.path("shared"));
